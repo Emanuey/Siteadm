@@ -44,10 +44,9 @@
             color: white;
             border: none;
             padding: 12px 20px;
-            margin-top: 20px;
+            margin-top: 10px;
             border-radius: 5px;
             cursor: pointer;
-            width: 100%;
             font-size: 16px;
             font-weight: bold;
         }
@@ -98,6 +97,11 @@
         .status-pendente {
             color: red;
             font-weight: bold;
+        }
+
+        .edit-input {
+            width: 30%;
+            margin-right: 10px;
         }
     </style>
 </head>
@@ -196,16 +200,29 @@
             div.className = 'cliente-card';
             div.innerHTML = `
                 <div class="cliente-info">
-                    <strong>${cliente.nome}</strong> - ${cliente.email} - ${cliente.telefone}
+                    <input class="edit-input" type="text" value="${cliente.nome}" onchange="editarCliente(${index}, 'nome', this.value)">
+                    <input class="edit-input" type="email" value="${cliente.email}" onchange="editarCliente(${index}, 'email', this.value)">
+                    <input class="edit-input" type="text" value="${cliente.telefone}" onchange="editarCliente(${index}, 'telefone', this.value)">
                     <button onclick="removerCliente(${index})">Remover</button>
                 </div>
                 <div>
                     <strong>Parcelas:</strong>
-                    ${cliente.parcelas.map(p => `<div>Parcela ${p.numero}: R$ ${p.valor.toFixed(2)} - <span class="${p.status === 'pago' ? 'status-pago' : 'status-pendente'}">${p.status}</span></div>`).join('')}
+                    ${cliente.parcelas.map((p, pIndex) => `
+                        <div>
+                            Parcela ${p.numero}: R$ ${p.valor.toFixed(2)} - 
+                            <span class="${p.status === 'pago' ? 'status-pago' : 'status-pendente'}">${p.status}</span>
+                            <button onclick="enviarWhatsapp('${cliente.telefone}', ${p.numero}, ${p.valor})">Enviar pelo WhatsApp</button>
+                        </div>
+                    `).join('')}
                 </div>
             `;
             listContainer.appendChild(div);
         });
+    }
+
+    function editarCliente(index, campo, valor) {
+        clientes[index][campo] = valor;
+        localStorage.setItem('clientes', JSON.stringify(clientes));
     }
 
     function removerCliente(index) {
@@ -216,6 +233,12 @@
         }
     }
 
+    function enviarWhatsapp(telefone, parcela, valor) {
+        const mensagem = `Olá! Aqui é da MoveCrédito.\n\nSegue o link para pagamento da Parcela ${parcela} no valor de R$ ${valor.toFixed(2)}.`;
+        const url = `https://wa.me/${telefone}?text=${encodeURIComponent(mensagem)}`;
+        window.open(url, '_blank');
+    }
+
     function limparCampos() {
         document.getElementById('nome').value = '';
         document.getElementById('email').value = '';
@@ -224,12 +247,8 @@
         document.getElementById('parcelasContainer').innerHTML = '';
     }
 
-    // Inicializa a lista de clientes ao carregar a página
     listarClientes();
 </script>
-
-</body>
-</html>
 
 </body>
 </html>
