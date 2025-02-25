@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - MoveCrédito</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        label {
+            display: block;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        input[type="text"], input[type="email"], input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        button {
+            background-color: #00bcd4;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            margin-top: 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        button:hover {
+            background-color: #0097a7;
+        }
+
+        .link-output {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #e6ffe6;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            word-break: break-word;
+        }
+
+        .parcelas-container {
+            margin-top: 20px;
+        }
+
+        .parcela-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .parcela-item input {
+            width: 45%;
+        }
+
+        img.logo {
+            display: block;
+            margin: 0 auto 20px auto;
+            width: 150px;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #666;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <img src="logo" alt="MoveCrédito" class="logo">
+    <h1>Admin - Cadastrar Cliente</h1>
+
+    <label for="nome">Nome do Cliente:</label>
+    <input type="text" id="nome" placeholder="Nome completo">
+
+    <label for="email">E-mail do Cliente:</label>
+    <input type="email" id="email" placeholder="E-mail">
+
+    <label for="telefone">Telefone (WhatsApp):</label>
+    <input type="text" id="telefone" placeholder="Ex: 5561999999999">
+
+    <label for="numParcelas">Número de Parcelas:</label>
+    <input type="number" id="numParcelas" min="1" placeholder="Ex: 3">
+
+    <button onclick="gerarParcelas()">Definir Parcelas</button>
+
+    <div class="parcelas-container" id="parcelasContainer"></div>
+
+    <button onclick="gerarLink()">Gerar Link de Pagamento</button>
+
+    <div class="link-output" id="linkOutput" style="display:none;"></div>
+
+    <div class="footer">
+        © 2024 MoveCrédito - Todos os direitos reservados.
+    </div>
+</div>
+
+<script>
+    let parcelas = [];
+
+    function gerarParcelas() {
+        const numParcelas = parseInt(document.getElementById('numParcelas').value);
+        const container = document.getElementById('parcelasContainer');
+        container.innerHTML = ''; // Limpa o container
+
+        parcelas = [];
+
+        for (let i = 1; i <= numParcelas; i++) {
+            const div = document.createElement('div');
+            div.className = 'parcela-item';
+            div.innerHTML = `
+                <input type="number" placeholder="Parcela ${i} - Valor (R$)" id="parcelaValor${i}">
+                <input type="text" placeholder="Status (pendente/pago)" id="parcelaStatus${i}" value="pendente">
+            `;
+            container.appendChild(div);
+        }
+    }
+
+    function gerarLink() {
+        const nome = document.getElementById('nome').value;
+        const email = document.getElementById('email').value;
+        const telefone = document.getElementById('telefone').value;
+
+        if (!nome || !email || !telefone) {
+            alert('Por favor, preencha todos os campos.');
+            return;
+        }
+
+        const numParcelas = parseInt(document.getElementById('numParcelas').value);
+        parcelas = [];
+
+        for (let i = 1; i <= numParcelas; i++) {
+            const valor = parseFloat(document.getElementById(`parcelaValor${i}`).value);
+            const status = document.getElementById(`parcelaStatus${i}`).value || 'pendente';
+
+            if (isNaN(valor)) {
+                alert(`Preencha o valor da parcela ${i}.`);
+                return;
+            }
+
+            parcelas.push({ numero: i, valor, status });
+        }
+
+        const cliente = {
+            nome,
+            email,
+            telefone,
+            parcelas
+        };
+
+        const clienteEncoded = encodeURIComponent(JSON.stringify(cliente));
+        const linkPagamento = `${window.location.origin}/pagamento.html?cliente=${clienteEncoded}`;
+
+        const linkOutput = document.getElementById('linkOutput');
+        linkOutput.innerHTML = `<strong>Link Gerado:</strong><br><a href="${linkPagamento}" target="_blank">${linkPagamento}</a>`;
+        linkOutput.style.display = 'block';
+    }
+</script>
+
+</body>
+</html>
