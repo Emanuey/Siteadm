@@ -125,7 +125,8 @@
 </div>
 
 <script>
-    const GOOGLE_SHEET_API = "https://script.google.com/macros/s/AKfycbzmGgyjrwCB4PUzP0mJPBo6ITbiHraGiI7PKKqd6EsrEfINHJHmVAZaG2oR2yOKZY7T-g/exec"; // Seu link da API
+    // Atualizado com o novo link fornecido
+    const GOOGLE_SHEET_API = "https://script.google.com/macros/s/AKfycbzmGgyjrwCB4PUzP0mJPBo6ITbiHraGiI7PKKqd6EsrEfINHJHmVAZaG2oR2yOKZY7T-g/exec";
 
     let parcelas = [];
 
@@ -193,16 +194,21 @@
     function enviarDadosGoogleSheets(cliente) {
         fetch(GOOGLE_SHEET_API, {
             method: "POST",
-            mode: "no-cors",
             headers: {
                 "Content-Type": "application/json"
             },
             body: JSON.stringify(cliente)
         })
-        .then(() => {
-            alert("Cliente cadastrado com sucesso!");
+        .then(response => response.json())
+        .then(data => {
+            if (data.result === "success") {
+                alert("Cliente cadastrado com sucesso! ID: " + data.id);
+            } else {
+                alert("Erro ao cadastrar cliente. Verifique as configurações.");
+            }
         })
         .catch((error) => {
+            console.error("Erro:", error);
             alert("Erro ao enviar os dados: " + error);
         });
     }
@@ -210,3 +216,4 @@
 
 </body>
 </html>
+
