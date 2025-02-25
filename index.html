@@ -126,7 +126,7 @@
 
 <script>
     // Nova URL do Google Apps Script Web App
-    const GOOGLE_SHEET_API = "https://script.google.com/macros/s/AKfycbzmGgyjrwCB4PUzP0mJPBo6ITbiHraGiI7PKKqd6EsrEfINHJHmVAZaG2oR2yOKZY7T-g/exec";
+    const GOOGLE_SHEET_API = "https://script.google.com/macros/s/AKfycbxwrIbwkNMpKNKia1jDhGY4EGqi8jv5hUSRX7CuLimuesGvTVjUl2iq5RFxprsYoAfpvw/exec";
 
     let parcelas = [];
 
@@ -202,7 +202,7 @@
         })
         .then(response => {
             if (!response.ok) {
-                throw new Error('Erro na resposta da API');
+                throw new Error(`Erro na resposta da API: ${response.statusText}`);
             }
             return response.json();
         })
@@ -210,7 +210,7 @@
             if (data.result === "success") {
                 alert("Cliente cadastrado com sucesso! ID: " + data.id);
             } else {
-                alert("Erro ao cadastrar cliente. Verifique as configurações.");
+                alert("Erro ao cadastrar cliente: " + data.message);
             }
         })
         .catch((error) => {
