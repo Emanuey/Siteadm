@@ -125,7 +125,7 @@
 </div>
 
 <script>
-    // Atualizado com o novo link fornecido
+    // Nova URL do Google Apps Script Web App
     const GOOGLE_SHEET_API = "https://script.google.com/macros/s/AKfycbzmGgyjrwCB4PUzP0mJPBo6ITbiHraGiI7PKKqd6EsrEfINHJHmVAZaG2oR2yOKZY7T-g/exec";
 
     let parcelas = [];
@@ -194,12 +194,18 @@
     function enviarDadosGoogleSheets(cliente) {
         fetch(GOOGLE_SHEET_API, {
             method: "POST",
+            mode: "cors", // Habilita CORS
             headers: {
                 "Content-Type": "application/json"
             },
             body: JSON.stringify(cliente)
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Erro na resposta da API');
+            }
+            return response.json();
+        })
         .then(data => {
             if (data.result === "success") {
                 alert("Cliente cadastrado com sucesso! ID: " + data.id);
@@ -208,12 +214,11 @@
             }
         })
         .catch((error) => {
-            console.error("Erro:", error);
-            alert("Erro ao enviar os dados: " + error);
+            console.error("Erro ao fazer fetch:", error); // Log detalhado
+            alert("Erro ao enviar os dados: " + error.message);
         });
     }
 </script>
 
 </body>
 </html>
-
