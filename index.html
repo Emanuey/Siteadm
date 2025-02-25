@@ -19,7 +19,7 @@
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
         }
-        
+
         h1, h2 {
             text-align: center;
             color: #333;
@@ -31,7 +31,7 @@
             font-weight: bold;
         }
 
-        input[type="text"], input[type="email"], input[type="number"] {
+        input[type="text"], input[type="email"], input[type="number"], select {
             width: 100%;
             padding: 10px;
             margin-top: 5px;
@@ -102,6 +102,26 @@
         .edit-input {
             width: 30%;
             margin-right: 10px;
+        }
+
+        .parcela-edit {
+            width: 100px;
+            margin-right: 10px;
+        }
+
+        .remove-btn {
+            background-color: #ff4d4d;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .remove-btn:hover {
+            background-color: #cc0000;
         }
     </style>
 </head>
@@ -203,13 +223,13 @@
                     <input class="edit-input" type="text" value="${cliente.nome}" onchange="editarCliente(${index}, 'nome', this.value)">
                     <input class="edit-input" type="email" value="${cliente.email}" onchange="editarCliente(${index}, 'email', this.value)">
                     <input class="edit-input" type="text" value="${cliente.telefone}" onchange="editarCliente(${index}, 'telefone', this.value)">
-                    <button onclick="removerCliente(${index})">Remover</button>
+                    <button class="remove-btn" onclick="removerCliente(${index})">Remover</button>
                 </div>
                 <div>
                     <strong>Parcelas:</strong>
                     ${cliente.parcelas.map((p, pIndex) => `
                         <div>
-                            Parcela ${p.numero}: R$ ${p.valor.toFixed(2)} - 
+                            Parcela <input class="parcela-edit" type="number" value="${p.valor}" onchange="editarParcela(${index}, ${pIndex}, this.value)"> - 
                             <span class="${p.status === 'pago' ? 'status-pago' : 'status-pendente'}">${p.status}</span>
                             <button onclick="enviarWhatsapp('${cliente.telefone}', ${p.numero}, ${p.valor})">Enviar pelo WhatsApp</button>
                         </div>
@@ -222,6 +242,11 @@
 
     function editarCliente(index, campo, valor) {
         clientes[index][campo] = valor;
+        localStorage.setItem('clientes', JSON.stringify(clientes));
+    }
+
+    function editarParcela(clienteIndex, parcelaIndex, novoValor) {
+        clientes[clienteIndex].parcelas[parcelaIndex].valor = parseFloat(novoValor);
         localStorage.setItem('clientes', JSON.stringify(clientes));
     }
 
