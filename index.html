@@ -12,7 +12,7 @@
         }
 
         .container {
-            max-width: 700px;
+            max-width: 900px;
             margin: auto;
             background: #fff;
             padding: 20px;
@@ -20,7 +20,7 @@
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
         }
 
-        h1 {
+        h1, h2 {
             text-align: center;
             color: #333;
         }
@@ -56,7 +56,7 @@
             background-color: #0097a7;
         }
 
-        .link-output {
+        .link-output, .clientes-list {
             margin-top: 20px;
             padding: 10px;
             background-color: #e6ffe6;
@@ -65,11 +65,15 @@
             word-break: break-word;
         }
 
-        .parcelas-container {
+        .parcelas-container, .cliente-card {
             margin-top: 20px;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border: 1px solid #ccc;
+            border-radius: 5px;
         }
 
-        .parcela-item {
+        .parcela-item, .cliente-info {
             display: flex;
             justify-content: space-between;
             margin-bottom: 10px;
@@ -79,24 +83,27 @@
             width: 45%;
         }
 
-        img.logo {
-            display: block;
-            margin: 0 auto 20px auto;
-            width: 150px;
-        }
-
         .footer {
             text-align: center;
             margin-top: 30px;
             color: #666;
             font-size: 14px;
         }
+
+        .status-pago {
+            color: green;
+            font-weight: bold;
+        }
+
+        .status-pendente {
+            color: red;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <img src="logo" alt="MoveCrédito" class="logo">
     <h1>Admin - Cadastrar Cliente</h1>
 
     <label for="nome">Nome do Cliente:</label>
@@ -115,9 +122,10 @@
 
     <div class="parcelas-container" id="parcelasContainer"></div>
 
-    <button onclick="gerarLink()">Gerar Link de Pagamento</button>
+    <button onclick="salvarCliente()">Salvar Cliente</button>
 
-    <div class="link-output" id="linkOutput" style="display:none;"></div>
+    <h2>Clientes Cadastrados</h2>
+    <div class="clientes-list" id="clientesList"></div>
 
     <div class="footer">
         © 2024 MoveCrédito - Todos os direitos reservados.
@@ -125,45 +133,42 @@
 </div>
 
 <script>
-    // Nova URL do Google Apps Script Web App
-    const GOOGLE_SHEET_API = "https://script.google.com/macros/s/AKfycbzfZHTEl0fDFTgr7eEC-Eks5sLq1xd0q_T-e8dixMO7b9atE4-W_caMfHBy0TgTXIEbqA/exec";
-
-    let parcelas = [];
+    let clientes = JSON.parse(localStorage.getItem('clientes')) || [];
 
     function gerarParcelas() {
         const numParcelas = parseInt(document.getElementById('numParcelas').value);
         const container = document.getElementById('parcelasContainer');
-        container.innerHTML = ''; // Limpa o container
-
-        parcelas = [];
+        container.innerHTML = '';
 
         for (let i = 1; i <= numParcelas; i++) {
             const div = document.createElement('div');
             div.className = 'parcela-item';
             div.innerHTML = `
                 <input type="number" placeholder="Parcela ${i} - Valor (R$)" id="parcelaValor${i}">
-                <input type="text" placeholder="Status (pendente/pago)" id="parcelaStatus${i}" value="pendente">
+                <select id="parcelaStatus${i}">
+                    <option value="pendente">Pendente</option>
+                    <option value="pago">Pago</option>
+                </select>
             `;
             container.appendChild(div);
         }
     }
 
-    function gerarLink() {
+    function salvarCliente() {
         const nome = document.getElementById('nome').value;
         const email = document.getElementById('email').value;
         const telefone = document.getElementById('telefone').value;
+        const numParcelas = parseInt(document.getElementById('numParcelas').value);
 
-        if (!nome || !email || !telefone) {
+        if (!nome || !email || !telefone || isNaN(numParcelas)) {
             alert('Por favor, preencha todos os campos.');
             return;
         }
 
-        const numParcelas = parseInt(document.getElementById('numParcelas').value);
-        parcelas = [];
-
+        const parcelas = [];
         for (let i = 1; i <= numParcelas; i++) {
             const valor = parseFloat(document.getElementById(`parcelaValor${i}`).value);
-            const status = document.getElementById(`parcelaStatus${i}`).value || 'pendente';
+            const status = document.getElementById(`parcelaStatus${i}`).value;
 
             if (isNaN(valor)) {
                 alert(`Preencha o valor da parcela ${i}.`);
@@ -173,52 +178,58 @@
             parcelas.push({ numero: i, valor, status });
         }
 
-        const cliente = {
-            nome,
-            email,
-            telefone,
-            parcelas
-        };
+        const cliente = { nome, email, telefone, parcelas };
+        clientes.push(cliente);
+        localStorage.setItem('clientes', JSON.stringify(clientes));
 
-        // Envia os dados para o Google Sheets
-        enviarDadosGoogleSheets(cliente);
-
-        const clienteEncoded = encodeURIComponent(JSON.stringify(cliente));
-        const linkPagamento = `${window.location.origin}/pagamento.html?cliente=${clienteEncoded}`;
-
-        const linkOutput = document.getElementById('linkOutput');
-        linkOutput.innerHTML = `<strong>Link Gerado:</strong><br><a href="${linkPagamento}" target="_blank">${linkPagamento}</a>`;
-        linkOutput.style.display = 'block';
+        alert('Cliente salvo com sucesso!');
+        listarClientes();
+        limparCampos();
     }
 
-    function enviarDadosGoogleSheets(cliente) {
-        fetch(GOOGLE_SHEET_API, {
-            method: "POST",
-            mode: "cors", // Habilita CORS
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(cliente)
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`Erro na resposta da API: ${response.statusText}`);
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data.result === "success") {
-                alert("Cliente cadastrado com sucesso! ID: " + data.id);
-            } else {
-                alert("Erro ao cadastrar cliente: " + data.message);
-            }
-        })
-        .catch((error) => {
-            console.error("Erro ao fazer fetch:", error); // Log detalhado
-            alert("Erro ao enviar os dados: " + error.message);
+    function listarClientes() {
+        const listContainer = document.getElementById('clientesList');
+        listContainer.innerHTML = '';
+
+        clientes.forEach((cliente, index) => {
+            const div = document.createElement('div');
+            div.className = 'cliente-card';
+            div.innerHTML = `
+                <div class="cliente-info">
+                    <strong>${cliente.nome}</strong> - ${cliente.email} - ${cliente.telefone}
+                    <button onclick="removerCliente(${index})">Remover</button>
+                </div>
+                <div>
+                    <strong>Parcelas:</strong>
+                    ${cliente.parcelas.map(p => `<div>Parcela ${p.numero}: R$ ${p.valor.toFixed(2)} - <span class="${p.status === 'pago' ? 'status-pago' : 'status-pendente'}">${p.status}</span></div>`).join('')}
+                </div>
+            `;
+            listContainer.appendChild(div);
         });
     }
+
+    function removerCliente(index) {
+        if (confirm('Tem certeza que deseja remover este cliente?')) {
+            clientes.splice(index, 1);
+            localStorage.setItem('clientes', JSON.stringify(clientes));
+            listarClientes();
+        }
+    }
+
+    function limparCampos() {
+        document.getElementById('nome').value = '';
+        document.getElementById('email').value = '';
+        document.getElementById('telefone').value = '';
+        document.getElementById('numParcelas').value = '';
+        document.getElementById('parcelasContainer').innerHTML = '';
+    }
+
+    // Inicializa a lista de clientes ao carregar a página
+    listarClientes();
 </script>
+
+</body>
+</html>
 
 </body>
 </html>
